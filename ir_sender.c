@@ -10,15 +10,15 @@ volatile uint8_t ir_state = IR_STATE_STOPPED;
 volatile uint8_t ir_pulse_count;
 volatile uint8_t ir_pause_count;
 
-inline void ir_clear_pin() {
+static inline void ir_clear_pin() {
     OC0A_PORT &= ~(_BV(OC0A_BIT));
 }
 
-inline void ir_enable_pwm_output() {
+static inline void ir_enable_pwm_output() {
     TCCR0A |= _BV(COM0A0);
 }
 
-inline void ir_disable_pwm_output() {
+static inline void ir_disable_pwm_output() {
     TCCR0A &= ~(_BV(COM0A0));
 }
 
@@ -58,10 +58,6 @@ ISR(TIMER0_COMPA_vect)
 
         case IR_STATE_PULSE:
             if (ir_pulse_count == 0) {
-
-                // toggle debug led
-                PORTB ^= _BV(PB0);
-
                 ir_disable_pwm_output();
                 ir_clear_pin();
                 // all pulse send, now wait ir_pause_count cycles
@@ -77,7 +73,7 @@ ISR(TIMER0_COMPA_vect)
                 // for next bit
                 ir_state = IR_STATE_STOPPED;
             } else {
-                ir_pulse_count--;
+                ir_pause_count--;
             }
             break;
 
