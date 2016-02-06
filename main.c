@@ -28,7 +28,7 @@ inline void led_toggle() {
 
 int main() {
     led_init();
-    while(1) {
+    while (1) {
         led_on();
         _delay_ms(200);
         led_off();
