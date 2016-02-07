@@ -2,11 +2,7 @@
 #include <util/atomic.h>
 #include "include/ir_sender.h"
 
-#define IR_STATE_STOPPED 0
-#define IR_STATE_PULSE 1
-#define IR_STATE_PAUSE 2
-
-volatile uint8_t ir_state = IR_STATE_STOPPED;
+volatile static enum state {pulse, pause, stopped} ir_state;
 volatile uint8_t ir_pulse_count;
 volatile uint8_t ir_pause_count;
 
@@ -48,7 +44,7 @@ void ir_pulse(uint8_t pulse_count, uint8_t pause_count) {
         ir_enable_pwm_output();
         ir_pulse_count = pulse_count * 2;
         ir_pause_count = pause_count * 2;
-        ir_state = IR_STATE_PULSE;
+        ir_state = pulse;
     }
 }
 
@@ -56,33 +52,33 @@ ISR(TIMER0_COMPA_vect)
 {
     switch (ir_state) {
 
-        case IR_STATE_PULSE:
+        case pulse:
             if (ir_pulse_count == 0) {
                 ir_disable_pwm_output();
                 ir_clear_pin();
                 // all pulse send, now wait ir_pause_count cycles
-                ir_state = IR_STATE_PAUSE;
+                ir_state = pause;
             } else {
                 ir_pulse_count--;
             }
             break;
 
-        case IR_STATE_PAUSE:
+        case pause:
             if (ir_pause_count == 0) {
                 // end of pause, signal everyone that we are ready
                 // for next bit
-                ir_state = IR_STATE_STOPPED;
+                ir_state = stopped;
             } else {
                 ir_pause_count--;
             }
             break;
 
         default:
-            ir_state = IR_STATE_STOPPED;
+            ir_state = stopped;
             break;
     }
 }
 
 void ir_wait() {
-    while(ir_state != IR_STATE_STOPPED) {}
+    while(ir_state != stopped) {}
 }
