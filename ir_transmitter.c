@@ -2,10 +2,18 @@
 
 #include "include/ir_transmitter.h"
 
-static const uint8_t IR_PULSE_COUNT = 6 * 2;
-static const uint8_t IR_START_STOP_COUNT = 39 * 2;
-static const uint8_t IR_LOW_COUNT = (10 - 3) * 2;
-static const uint8_t IR_HIGH_COUNT = (21 - 3) * 2;
+// PWM signal with period based on prescale
+// for 38kHz signal and 50% duty cycle
+#define IR_FREQ 38000UL
+#define IR_PRESCALE 1
+#define IR_PERIOD (F_CPU/IR_PRESCALE/IR_FREQ)
+#define IR_DUTY_CYCLE (IR_PERIOD / 2)
+
+#define  IR_PULSE_CORRECTION 3
+#define  IR_PULSE_COUNT 6 * 2
+#define  IR_START_STOP_COUNT 39 * 2
+#define  IR_LOW_COUNT (10 - IR_PULSE_CORRECTION) * 2
+#define  IR_HIGH_COUNT (21 - IR_PULSE_CORRECTION) * 2
 
 volatile static enum state {pulse, pause, stopped} ir_state;
 uint8_t ir_pulse_count;

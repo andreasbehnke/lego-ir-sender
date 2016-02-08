@@ -10,13 +10,6 @@
 
 #include <inttypes.h>
 
-// PWM signal with period based on prescale
-// for 38kHz signal and 50% duty cycle
-#define IR_FREQ 38000UL
-#define IR_PRESCALE 1
-#define IR_PERIOD (F_CPU/IR_PRESCALE/IR_FREQ)
-#define IR_DUTY_CYCLE (IR_PERIOD / 2)
-
 // ir module API
 extern void ir_sender_init();
 
