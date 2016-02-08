@@ -15,32 +15,32 @@
 #define  IR_LOW_COUNT (10 - IR_PULSE_CORRECTION) * 2
 #define  IR_HIGH_COUNT (21 - IR_PULSE_CORRECTION) * 2
 
-volatile static enum state {pulse, pause, stopped} ir_state;
+volatile static enum state {pulse, pause, stopped} state;
 uint8_t ir_pulse_count;
 uint8_t ir_pause_count;
 
-static inline void ir_clear_pin() {
+static inline void clear_output_pin() {
     OC0A_PORT &= ~(_BV(OC0A_BIT));
 }
 
-static inline void ir_enable_pwm_output() {
+static inline void enable_pwm_output() {
     TCCR0A |= _BV(COM0A0);
 }
 
-static inline void ir_disable_pwm_output() {
+static inline void disable_pwm_output() {
     TCCR0A &= ~(_BV(COM0A0));
 }
 
 ISR(TIMER0_COMPA_vect)
 {
-    switch (ir_state) {
+    switch (state) {
 
         case pulse:
             if (ir_pulse_count == 0) {
-                ir_disable_pwm_output();
-                ir_clear_pin();
+                disable_pwm_output();
+                clear_output_pin();
                 // all pulse send, now wait ir_pause_count cycles
-                ir_state = pause;
+                state = pause;
             } else {
                 ir_pulse_count--;
             }
@@ -50,14 +50,14 @@ ISR(TIMER0_COMPA_vect)
             if (ir_pause_count == 0) {
                 // end of pause, signal everyone that we are ready
                 // for next bit
-                ir_state = stopped;
+                state = stopped;
             } else {
                 ir_pause_count--;
             }
             break;
 
         default:
-            ir_state = stopped;
+            state = stopped;
             break;
     }
 }
@@ -66,7 +66,7 @@ inline void ir_sender_init() {
     TCNT0 = 0;
     // PWM output pin
     OC0A_DDR |= _BV(OC0A_BIT);
-    ir_clear_pin();
+    clear_output_pin();
     // Clear Timer on Compare Match (CTC) Mode
     TCCR0A = _BV(WGM01);
     // do not use prescaler
@@ -80,31 +80,31 @@ inline void ir_sender_init() {
     DDRB |= _BV(PINB0);
 }
 
-static void ir_pulse(uint8_t pulse_count, uint8_t pause_count) {
-    ir_clear_pin();
-    ir_enable_pwm_output();
+static void send_pulse(uint8_t pulse_count, uint8_t pause_count) {
+    clear_output_pin();
+    enable_pwm_output();
     ir_pulse_count = pulse_count;
     ir_pause_count = pause_count;
-    ir_state = pulse;
+    state = pulse;
 }
 
-static inline void ir_wait() {
-    while(ir_state != stopped) {}
+static inline void wait() {
+    while(state != stopped) {}
 }
 
 static inline void send_start_stop() {
-    ir_pulse(IR_PULSE_COUNT, IR_START_STOP_COUNT);
-    ir_wait();
+    send_pulse(IR_PULSE_COUNT, IR_START_STOP_COUNT);
+    wait();
 }
 
 static inline void send_low() {
-    ir_pulse(IR_PULSE_COUNT, IR_LOW_COUNT);
-    ir_wait();
+    send_pulse(IR_PULSE_COUNT, IR_LOW_COUNT);
+    wait();
 }
 
 static inline void send_high() {
-    ir_pulse(IR_PULSE_COUNT, IR_HIGH_COUNT);
-    ir_wait();
+    send_pulse(IR_PULSE_COUNT, IR_HIGH_COUNT);
+    wait();
 }
 
 void ir_send_message(uint16_t message) {
