@@ -8,8 +8,8 @@ static const uint8_t IR_LOW_COUNT = (10 - 3) * 2;
 static const uint8_t IR_HIGH_COUNT = (21 - 3) * 2;
 
 volatile static enum state {pulse, pause, stopped} ir_state;
-volatile uint8_t ir_pulse_count;
-volatile uint8_t ir_pause_count;
+uint8_t ir_pulse_count;
+uint8_t ir_pause_count;
 
 static inline void ir_clear_pin() {
     OC0A_PORT &= ~(_BV(OC0A_BIT));
@@ -72,6 +72,14 @@ inline void ir_sender_init() {
     DDRB |= _BV(PINB0);
 }
 
+static void ir_pulse(uint8_t pulse_count, uint8_t pause_count) {
+    ir_clear_pin();
+    ir_enable_pwm_output();
+    ir_pulse_count = pulse_count;
+    ir_pause_count = pause_count;
+    ir_state = pulse;
+}
+
 static inline void send_start_stop() {
     ir_pulse(IR_PULSE_COUNT, IR_START_STOP_COUNT);
     ir_wait();
@@ -87,16 +95,6 @@ static inline void send_high() {
     ir_wait();
 }
 
-void inline ir_pulse(uint8_t pulse_count, uint8_t pause_count) {
-    // interrupt is triggered for every half pulse,
-    // multiply pulse count by 2
-    ir_clear_pin();
-    ir_enable_pwm_output();
-    ir_pulse_count = pulse_count;
-    ir_pause_count = pause_count;
-    ir_state = pulse;
-}
-
 void ir_send_message(uint16_t message) {
     send_start_stop();
     uint8_t i = 16;
@@ -109,6 +107,8 @@ void ir_send_message(uint16_t message) {
         }
     } while(i > 0);
     send_start_stop();
+    // toggle debug led
+    PORTB ^= _BV(PB0);
 }
 
 void inline ir_wait() {

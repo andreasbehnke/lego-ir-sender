@@ -30,7 +30,5 @@ int main() {
         ir_send_message(0b1001010100110000);
 
         _delay_ms(1 * 16);
-        // toggle debug led
-        PORTB ^= _BV(PB0);
     }
 }

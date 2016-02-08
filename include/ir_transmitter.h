@@ -20,8 +20,6 @@
 // ir module API
 extern void ir_sender_init();
 
-extern void ir_pulse(uint8_t pulse_count, uint8_t pause_count);
-
 extern void ir_send_message(uint16_t message);
 
 extern void ir_wait();
