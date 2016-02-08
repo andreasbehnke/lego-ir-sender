@@ -15,6 +15,4 @@ extern void ir_sender_init();
 
 extern void ir_send_message(uint16_t message);
 
-extern void ir_wait();
-
 #endif /* INCLUDE_IR_TRANSMITTER_H_ */

@@ -88,6 +88,10 @@ static void ir_pulse(uint8_t pulse_count, uint8_t pause_count) {
     ir_state = pulse;
 }
 
+static inline void ir_wait() {
+    while(ir_state != stopped) {}
+}
+
 static inline void send_start_stop() {
     ir_pulse(IR_PULSE_COUNT, IR_START_STOP_COUNT);
     ir_wait();
@@ -117,8 +121,4 @@ void ir_send_message(uint16_t message) {
     send_start_stop();
     // toggle debug led
     PORTB ^= _BV(PB0);
-}
-
-void inline ir_wait() {
-    while(ir_state != stopped) {}
 }
