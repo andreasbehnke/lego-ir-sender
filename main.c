@@ -6,7 +6,8 @@
  */
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include "include/ir_sender.h"
+
+#include "include/ir_transmitter.h"
 
 static inline void send_start__stop() {
     ir_pulse(6, 39);

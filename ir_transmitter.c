@@ -1,6 +1,7 @@
 #include <avr/interrupt.h>
 #include <util/atomic.h>
-#include "include/ir_sender.h"
+
+#include "include/ir_transmitter.h"
 
 volatile static enum state {pulse, pause, stopped} ir_state;
 volatile uint8_t ir_pulse_count;

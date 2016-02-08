@@ -5,8 +5,8 @@
  *      Author: andreasbehnke
  */
 
-#ifndef INCLUDE_IR_SENDER_H_
-#define INCLUDE_IR_SENDER_H_
+#ifndef INCLUDE_IR_TRANSMITTER_H_
+#define INCLUDE_IR_TRANSMITTER_H_
 
 #include <inttypes.h>
 
@@ -24,4 +24,4 @@ extern void ir_pulse(uint8_t pulse_count, uint8_t pause_count);
 
 extern void ir_wait();
 
-#endif /* INCLUDE_IR_SENDER_H_ */
+#endif /* INCLUDE_IR_TRANSMITTER_H_ */
