@@ -12,7 +12,6 @@
 
 // power functions API
 
-// calculate longitudinal redundancy check and return complete command
-extern uint16_t pf_calculate_lrc(uint8_t nibble1, uint8_t nibble2, uint8_t nibble3);
+extern void pf_combo_pwm_mode(uint8_t channel, uint8_t output_a, uint8_t output_b);
 
 #endif /* INCLUDE_POWER_FUNCTIONS_H_ */
