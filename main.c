@@ -15,24 +15,25 @@
 #define DEBUG_BAUD UART_BAUD_SELECT(9600, F_CPU)
 
 static uint8_t adc_to_pwm[] = {
-        0b0111, // 0
-        0b0110, // 1
-        0b0101, // 2
-        0b0100, // 3
-        0b0011, // 4
-        0b0010, // 5
-        0b0001, // 6
-        0b0000, // 7
-        0b1111, // 8
-        0b1110, // 9
-        0b1101, // 10
-        0b1100, // 11
-        0b1011, // 12
-        0b1010, // 13
-        0b1001  // 14
+        0b0111, // forward 7
+        0b0110, // forward 6
+        0b0101, // forward 5
+        0b0100, // forward 4
+        0b0011, // forward 3
+        0b0010, // forward 2
+        0b0001, // forward 1
+        0b0000, // float
+        0b1111, // backward 1
+        0b1110, // backward 2
+        0b1101, // backward 3
+        0b1100, // backward 4
+        0b1011, // backward 5
+        0b1010, // backward 6
+        0b1001  // backward 7
 };
 
 static uint8_t pwm_values[] = {255, 255, 255, 255};
+static uint8_t index_values[] = {7, 7, 7, 7};
 
 static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
     uint8_t index = adc_value / 17;
@@ -46,11 +47,11 @@ static void send_channel(uint8_t channel) {
     uint8_t output_a = adc_to_combo_pwm(adc_read(index_a));
     uint8_t output_b = adc_to_combo_pwm(adc_read(index_b));
     if (output_a != pwm_values[index_a] || output_b != pwm_values[index_b]) {
-        PORTB |= _BV(PB0);
+        PORTB |= _BV(PB0); // debug led
         pwm_values[index_a] = output_a;
         pwm_values[index_b] = output_b;
         pf_combo_pwm_mode(channel, output_a, output_b);
-        PORTB &= ~_BV(PB0);
+        PORTB &= ~_BV(PB0); // debug led
     }
 }
 
