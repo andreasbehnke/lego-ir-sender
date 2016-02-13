@@ -75,9 +75,6 @@ inline void ir_sender_init() {
     OCR0A = IR_DUTY_CYCLE;
     // enable interrupt on compare match
     TIMSK0 |= _BV(OCIE0A);
-
-    // debug LED
-    DDRB |= _BV(PINB0);
 }
 
 static void send_pulse(uint8_t pulse_count, uint8_t pause_count) {
@@ -119,6 +116,4 @@ void ir_send_message(uint16_t message) {
         }
     } while(i > 0);
     send_start_stop();
-    // toggle debug led
-    PORTB ^= _BV(PB0);
 }

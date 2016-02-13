@@ -32,6 +32,8 @@ static uint8_t adc_to_pwm[] = {
         0b1001  // 14
 };
 
+static uint8_t pwm_values[] = {255, 255, 255, 255};
+
 static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
     uint8_t index = adc_value / 17;
     if (index > 14) index = 14;
@@ -39,12 +41,22 @@ static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
 }
 
 static void send_channel(uint8_t channel) {
-    uint8_t output_a = adc_to_combo_pwm(adc_read(channel * 2));
-    uint8_t output_b = adc_to_combo_pwm(adc_read(channel * 2 + 1));
-    pf_combo_pwm_mode(channel, output_a, output_b);
+    uint8_t index_a = channel * 2;
+    uint8_t index_b = channel * 2 + 1;
+    uint8_t output_a = adc_to_combo_pwm(adc_read(index_a));
+    uint8_t output_b = adc_to_combo_pwm(adc_read(index_b));
+    if (output_a != pwm_values[index_a] || output_b != pwm_values[index_b]) {
+        PORTB |= _BV(PB0);
+        pwm_values[index_a] = output_a;
+        pwm_values[index_b] = output_b;
+        pf_combo_pwm_mode(channel, output_a, output_b);
+        PORTB &= ~_BV(PB0);
+    }
 }
 
 int main() {
+    // debug LED
+    DDRB |= _BV(PINB0);
     ir_sender_init();
     adc_init();
     sei();
