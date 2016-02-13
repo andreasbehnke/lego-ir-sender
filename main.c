@@ -39,13 +39,19 @@ static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
 }
 
 int main() {
+    uint8_t ch_1a, ch_1b,  ch_2a,  ch_2b;
     ir_sender_init();
     adc_init();
     sei();
     while (1) {
-        uint8_t pwm_a = adc_to_combo_pwm(adc_read(0));
-        uint8_t pwm_b = adc_to_combo_pwm(adc_read(1));
-        pf_combo_pwm_mode(0, pwm_a, pwm_b);
+        // channel 1
+        ch_1a = adc_to_combo_pwm(adc_read(0));
+        ch_1b = adc_to_combo_pwm(adc_read(1));
+        pf_combo_pwm_mode(0, ch_1a, ch_1b);
 
+        // channel 2
+        ch_2a = adc_to_combo_pwm(adc_read(2));
+        ch_2b = adc_to_combo_pwm(adc_read(3));
+        pf_combo_pwm_mode(1, ch_2a, ch_2b);
     }
 }
