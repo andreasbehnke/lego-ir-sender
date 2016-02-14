@@ -33,7 +33,7 @@ static uint8_t adc_to_pwm[] = {
 };
 
 static uint8_t pwm_values[] = {255, 255, 255, 255};
-static uint8_t index_values[] = {7, 7, 7, 7};
+static uint8_t channel_timer[] = {0, 0};
 
 static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
     uint8_t index = adc_value / 17;
@@ -46,12 +46,15 @@ static void send_channel(uint8_t channel) {
     uint8_t index_b = channel * 2 + 1;
     uint8_t output_a = adc_to_combo_pwm(adc_read(index_a));
     uint8_t output_b = adc_to_combo_pwm(adc_read(index_b));
-    if (output_a != pwm_values[index_a] || output_b != pwm_values[index_b]) {
+    if (output_a != pwm_values[index_a] || output_b != pwm_values[index_b] || channel_timer[channel] == 0) {
+        channel_timer[channel] = 255;
         PORTB |= _BV(PB0); // debug led
         pwm_values[index_a] = output_a;
         pwm_values[index_b] = output_b;
         pf_combo_pwm_mode(channel, output_a, output_b);
         PORTB &= ~_BV(PB0); // debug led
+    } else {
+        channel_timer[channel]--;
     }
 }
 
