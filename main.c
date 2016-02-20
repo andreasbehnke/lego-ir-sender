@@ -5,6 +5,7 @@
  *      Author: andreasbehnke
  */
 #include <stdlib.h>
+#include <stdbool.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
@@ -13,6 +14,9 @@
 #include "include/adc.h"
 
 #define DEBUG_BAUD UART_BAUD_SELECT(9600, F_CPU)
+#define REPEAT_COMMAND 5  // repeat every command 5 times
+#define WAIT_BETWEEN_REPEATS 15
+#define PAUSE 255
 
 static uint8_t adc_to_pwm[] = {
         0b0111, // forward 7
@@ -33,7 +37,13 @@ static uint8_t adc_to_pwm[] = {
 };
 
 static uint8_t pwm_values[] = {255, 255, 255, 255};
-static uint8_t channel_timer[] = {0, 0};
+static uint8_t counter[] = {0, 0};
+static uint8_t repeat_counter[] = {0, 0};
+static enum state {
+    repeat, // repeat command
+    pause, // wait between command repeat
+    wait // wait without command repeat
+    } state[] = {pause, pause};
 
 static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
     uint8_t index = adc_value / 17;
@@ -46,21 +56,53 @@ static void send_channel(uint8_t channel) {
     uint8_t index_b = channel * 2 + 1;
     uint8_t output_a = adc_to_combo_pwm(adc_read(index_a));
     uint8_t output_b = adc_to_combo_pwm(adc_read(index_b));
-    if (output_a != pwm_values[index_a] || output_b != pwm_values[index_b] || channel_timer[channel] == 0) {
-        channel_timer[channel] = 255;
-        PORTB |= _BV(PB0); // debug led
-        pwm_values[index_a] = output_a;
-        pwm_values[index_b] = output_b;
-        pf_combo_pwm_mode(channel, output_a, output_b);
-        PORTB &= ~_BV(PB0); // debug led
-    } else {
-        channel_timer[channel]--;
+
+    bool has_value_changed =  (output_a != pwm_values[index_a] || output_b != pwm_values[index_b]);
+    bool is_halt = (output_b == 0 && output_a == 0);
+
+    pwm_values[index_a] = output_a;
+    pwm_values[index_b] = output_b;
+
+    if (has_value_changed) {
+        state[channel] = repeat;
+        counter[channel] = 0;
+        repeat_counter[channel] = REPEAT_COMMAND;
+    }
+
+    switch (state[channel]) {
+        case repeat:
+            if (counter[channel] == 0) {
+                pf_combo_pwm_mode(channel, output_a, output_b);
+                if (--repeat_counter[channel] == 0) {
+                    if (is_halt) {
+                        state[channel] = wait;
+                    } else {
+                        state[channel] = pause;
+                        counter[channel] = PAUSE;
+                    }
+                } else {
+                    counter[channel] = WAIT_BETWEEN_REPEATS;
+                }
+            } else {
+                counter[channel]--;
+            }
+            break;
+        case pause:
+            if (--counter[channel] == 0) {
+                state[channel] = repeat;
+                counter[channel] = 0;
+                repeat_counter[channel] = REPEAT_COMMAND;
+            }
+            break;
+        case wait:
+            //noop
+            break;
+        default:
+            break;
     }
 }
 
 int main() {
-    // debug LED
-    DDRB |= _BV(PINB0);
     ir_sender_init();
     adc_init();
     sei();

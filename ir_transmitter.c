@@ -63,6 +63,8 @@ ISR(TIMER0_COMPA_vect)
 }
 
 inline void ir_sender_init() {
+    // debug LED
+    DDRB |= _BV(PINB0);
     TCNT0 = 0;
     // PWM output pin
     OC0A_DDR |= _BV(OC0A_BIT);
@@ -105,6 +107,7 @@ static inline void send_high() {
 }
 
 void ir_send_message(uint16_t message) {
+    PORTB |= _BV(PB0); // debug led on
     send_start_stop();
     uint8_t i = 16;
     do {
@@ -116,4 +119,5 @@ void ir_send_message(uint16_t message) {
         }
     } while(i > 0);
     send_start_stop();
+    PORTB &= ~_BV(PB0); // debug led off
 }
