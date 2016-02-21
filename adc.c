@@ -26,5 +26,9 @@ uint8_t adc_read(uint8_t channel) {
     ADMUX = (ADMUX & ~(0x1F)) | (channel & 0x1F);
     ADCSRA |= (1 << ADSC);
     while (ADCSRA & (1 << ADSC)) {}
-    return ADCH;
+    if (CHANNEL_DIRECTION & (1 << channel)) {
+        return 255 - ADCH;
+    } else {
+        return ADCH;
+    }
 }
