@@ -51,11 +51,21 @@ static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
     return adc_to_pwm[index];
 }
 
+static void init_switch() {
+    DDRC = 0x00; // all pins are input pins
+    PORTC = 0xFF; // activate all pullup resistors
+}
+
 static void send_channel(uint8_t channel) {
     uint8_t index_a = channel * 2;
     uint8_t index_b = channel * 2 + 1;
     uint8_t output_a = adc_to_combo_pwm(adc_read(index_a));
     uint8_t output_b = adc_to_combo_pwm(adc_read(index_b));
+
+    if (!(PINC & (1 << channel))) {
+        // break switch pressed
+        output_a = output_b = 0b1000;
+    }
 
     bool has_value_changed =  (output_a != pwm_values[index_a] || output_b != pwm_values[index_b]);
     bool is_halt = (output_b == 0 && output_a == 0);
@@ -103,6 +113,7 @@ static void send_channel(uint8_t channel) {
 }
 
 int main() {
+    init_switch();
     ir_sender_init();
     adc_init();
     sei();
