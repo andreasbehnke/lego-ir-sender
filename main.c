@@ -12,6 +12,7 @@
 #include "include/ir_transmitter.h"
 #include "include/power_functions.h"
 #include "include/adc.h"
+#include "include/command_input.h"
 
 #define DEBUG_BAUD UART_BAUD_SELECT(9600, F_CPU)
 #define REPEAT_COMMAND 5  // repeat every command 5 times
@@ -49,11 +50,6 @@ static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
     uint8_t index = adc_value / 17;
     if (index > 14) index = 14;
     return adc_to_pwm[index];
-}
-
-static void init_switch() {
-    DDRC = 0x00; // all pins are input pins
-    PORTC = 0xFF; // activate all pullup resistors
 }
 
 static void send_channel(uint8_t channel) {
@@ -113,7 +109,7 @@ static void send_channel(uint8_t channel) {
 }
 
 int main() {
-    init_switch();
+    init_command();
     ir_sender_init();
     adc_init();
     sei();

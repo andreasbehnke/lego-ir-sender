@@ -9,6 +9,7 @@
 #define INCLUDE_COMMAND_INPUT_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 struct command {
         uint8_t command_a;
