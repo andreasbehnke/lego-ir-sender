@@ -34,8 +34,8 @@ static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
     return adc_to_pwm[index];
 }
 
-extern struct command read_command(uint8_t channel) {
-    struct command command;
+extern struct pwm_command read_combo_command(uint8_t channel) {
+    struct pwm_command command;
     uint8_t index_a = channel * 2;
     uint8_t index_b = channel * 2 + 1;
     command.command_a = adc_to_combo_pwm(adc_read(index_a));

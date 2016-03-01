@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-struct command {
+struct pwm_command {
         uint8_t command_a;
         uint8_t command_b;
         bool is_halt;
@@ -21,6 +21,6 @@ struct command {
 
 extern void init_command();
 
-extern struct command read_command(uint8_t channel);
+extern struct pwm_command read_combo_command(uint8_t channel);
 
 #endif /* INCLUDE_COMMAND_INPUT_H_ */

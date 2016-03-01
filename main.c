@@ -27,7 +27,7 @@ static enum state {
     } state[] = {pause, pause};
 
 static void send_channel(uint8_t channel) {
-    struct command cmd = read_command(channel);
+    struct pwm_command cmd = read_combo_command(channel);
     if (cmd.has_command_changed) {
         state[channel] = repeat;
         counter[channel] = 0;
