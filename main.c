@@ -11,7 +11,6 @@
 
 #include "include/ir_transmitter.h"
 #include "include/power_functions.h"
-#include "include/adc.h"
 #include "include/command_input.h"
 
 #define DEBUG_BAUD UART_BAUD_SELECT(9600, F_CPU)
@@ -19,25 +18,6 @@
 #define WAIT_BETWEEN_REPEATS 15
 #define PAUSE 255
 
-static uint8_t adc_to_pwm[] = {
-        0b0111, // forward 7
-        0b0110, // forward 6
-        0b0101, // forward 5
-        0b0100, // forward 4
-        0b0011, // forward 3
-        0b0010, // forward 2
-        0b0001, // forward 1
-        0b0000, // float
-        0b1111, // backward 1
-        0b1110, // backward 2
-        0b1101, // backward 3
-        0b1100, // backward 4
-        0b1011, // backward 5
-        0b1010, // backward 6
-        0b1001  // backward 7
-};
-
-static uint8_t pwm_values[] = {255, 255, 255, 255};
 static uint8_t counter[] = {0, 0};
 static uint8_t repeat_counter[] = {0, 0};
 static enum state {
@@ -46,30 +26,9 @@ static enum state {
     wait // wait without command repeat
     } state[] = {pause, pause};
 
-static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
-    uint8_t index = adc_value / 17;
-    if (index > 14) index = 14;
-    return adc_to_pwm[index];
-}
-
 static void send_channel(uint8_t channel) {
-    uint8_t index_a = channel * 2;
-    uint8_t index_b = channel * 2 + 1;
-    uint8_t output_a = adc_to_combo_pwm(adc_read(index_a));
-    uint8_t output_b = adc_to_combo_pwm(adc_read(index_b));
-
-    if (!(PINC & (1 << channel))) {
-        // break switch pressed
-        output_a = output_b = 0b1000;
-    }
-
-    bool has_value_changed =  (output_a != pwm_values[index_a] || output_b != pwm_values[index_b]);
-    bool is_halt = (output_b == 0 && output_a == 0);
-
-    pwm_values[index_a] = output_a;
-    pwm_values[index_b] = output_b;
-
-    if (has_value_changed) {
+    struct command cmd = read_command(channel);
+    if (cmd.has_command_changed) {
         state[channel] = repeat;
         counter[channel] = 0;
         repeat_counter[channel] = REPEAT_COMMAND;
@@ -78,9 +37,9 @@ static void send_channel(uint8_t channel) {
     switch (state[channel]) {
         case repeat:
             if (counter[channel] == 0) {
-                pf_combo_pwm_mode(channel, output_a, output_b);
+                pf_combo_pwm_mode(channel, cmd.command_a, cmd.command_b);
                 if (--repeat_counter[channel] == 0) {
-                    if (is_halt) {
+                    if (cmd.is_halt) {
                         state[channel] = wait;
                     } else {
                         state[channel] = pause;
@@ -111,7 +70,6 @@ static void send_channel(uint8_t channel) {
 int main() {
     init_command();
     ir_sender_init();
-    adc_init();
     sei();
     while (1) {
         // channel 1
