@@ -39,7 +39,7 @@ static void send_channel(uint8_t channel) {
             if (counter[channel] == 0) {
                 pf_combo_pwm_mode(channel, cmd.command_a, cmd.command_b);
                 if (--repeat_counter[channel] == 0) {
-                    if (cmd.is_halt) {
+                    if (cmd.is_neutral_position) {
                         state[channel] = wait;
                     } else {
                         state[channel] = pause;

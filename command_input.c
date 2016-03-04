@@ -49,9 +49,9 @@ extern struct pwm_command read_combo_command(uint8_t channel) {
         is_break[channel] = true;
     }
 
-    command.is_halt = (command.command_b == 0 && command.command_a == 0);
+    command.is_neutral_position = (command.command_b == 0 && command.command_a == 0);
 
-    if (command.is_halt && is_break[channel]) {
+    if (command.is_neutral_position && is_break[channel]) {
         // release break, if all joysticks are in neutral halt position
         is_break[channel] = false;
     }

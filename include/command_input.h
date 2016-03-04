@@ -14,7 +14,7 @@
 struct pwm_command {
         uint8_t command_a;
         uint8_t command_b;
-        bool is_halt;
+        bool is_neutral_position;
         bool has_command_changed;
 };
 
