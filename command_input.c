@@ -22,6 +22,7 @@ static uint8_t adc_to_pwm[] = {
 
 static uint8_t last_command[] = {255, 255, 255, 255};
 static bool is_break[] = {false, false};
+static uint8_t speed[] = {127, 127, 127, 127};
 
 extern void init_command() {
     DDRC = 0x00; // all pins are input pins
@@ -35,31 +36,37 @@ static uint8_t adc_to_combo_pwm(uint8_t adc_value) {
     return adc_to_pwm[index];
 }
 
+static uint8_t accelerate(uint8_t index, uint8_t input) {
+    if (speed[index] > input) {
+        speed[index] -= 1;
+    } else if (speed[index] < input) {
+        speed[index] += 1;
+    }
+    return speed[index];
+}
+
 extern struct pwm_command read_combo_command(uint8_t channel) {
     struct pwm_command command;
     uint8_t index_a = channel * 2;
     uint8_t index_b = channel * 2 + 1;
-    command.command_a = adc_to_combo_pwm(adc_read(index_a));
-    command.command_b = adc_to_combo_pwm(adc_read(index_b));
+    command.command_a = adc_to_combo_pwm(accelerate(index_a, adc_read(index_a)));
+    command.command_b = adc_to_combo_pwm(accelerate(index_b, adc_read(index_b)));
 
     if (!(PINC & (1 << channel))) {
         // break switch pressed
         command.command_a = 0b1000;
-        command.command_b = 0b1000;
         is_break[channel] = true;
     }
 
     command.is_neutral_position = (command.command_b == 0 && command.command_a == 0);
 
-    if (command.is_neutral_position && is_break[channel]) {
-        // release break, if all joysticks are in neutral halt position
+    if (command.command_a == 0 && is_break[channel]) {
+        // release break if joystick is in neutral halt position
         is_break[channel] = false;
-    }
-    if (is_break[channel]) {
+    } else if (is_break[channel]) {
         // only release break after reaching neutral position of joystick,
         // override command.
         command.command_a = 0b1000;
-        command.command_b = 0b1000;
     }
 
     command.has_command_changed =  (command.command_a != last_command[index_a] || command.command_b != last_command[index_b]);

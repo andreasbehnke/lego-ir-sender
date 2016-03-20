@@ -8,6 +8,8 @@
 #ifndef INCLUDE_COMMAND_INPUT_H_
 #define INCLUDE_COMMAND_INPUT_H_
 
+#define ACCELERATION 1
+
 #include <stdbool.h>
 #include <stdint.h>
 
